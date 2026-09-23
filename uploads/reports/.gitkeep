@@ -1,0 +1,2 @@
+This file exists so the uploads/reports directory is included in the project.
+Incident report photos will be stored here. Ensure this folder is writable by the web server (chmod 755 or 775).
