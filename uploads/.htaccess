@@ -1,14 +1,5 @@
-# Prevent execution of any script in the uploads folder.
-# Uploaded files are validated as images server-side, but this is defense-in-depth
-# in case a malicious file ever ends up here.
-
-<IfModule mod_php.c>
-    php_flag engine off
-</IfModule>
-
 <FilesMatch "\.(php|php\d|phtml|pl|py|cgi|asp|aspx|exe|sh)$">
     Require all denied
 </FilesMatch>
 
-Options -Indexes -ExecCGI
-AddHandler cgi-script .php .php3 .php4 .php5 .php7 .phtml .pl .py .cgi
+Options -Indexes

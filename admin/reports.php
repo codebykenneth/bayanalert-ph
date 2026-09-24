@@ -67,6 +67,18 @@ $stmt = $db->prepare($sql);
 $stmt->execute($params);
 $reports = $stmt->fetchAll();
 
+// Load photos attached to the listed reports (one query, grouped by report)
+$imagesByReport = [];
+if (!empty($reports)) {
+    $ids = array_column($reports, 'id');
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $imgStmt = $db->prepare("SELECT report_id, file_path FROM incident_images WHERE report_id IN ($in) ORDER BY id");
+    $imgStmt->execute($ids);
+    foreach ($imgStmt->fetchAll() as $img) {
+        $imagesByReport[$img['report_id']][] = $img['file_path'];
+    }
+}
+
 $responders = $db->query("SELECT id, full_name FROM users WHERE role='responder' AND status='active'")->fetchAll();
 $statuses = ['Pending','Under Verification','Verified','Responding','Resolved','Rejected'];
 
@@ -117,6 +129,17 @@ require_once __DIR__ . '/../includes/navbar.php';
                 <p><strong>Description:</strong> <?= nl2br(e($r['description'])) ?></p>
                 <p><strong>Location:</strong> <?= e($r['location_text'] ?: '—') ?>, <?= e($r['barangay']) ?>, <?= e($r['city']) ?>, <?= e($r['province']) ?></p>
                 <p><strong>Severity:</strong> <?= e($r['severity']) ?> &middot; <strong>Status:</strong> <?= e($r['status']) ?></p>
+                <?php if (!empty($imagesByReport[$r['id']])): ?>
+                  <div class="mb-3">
+                    <strong>Photo<?= count($imagesByReport[$r['id']]) > 1 ? 's' : '' ?>:</strong><br>
+                    <?php foreach ($imagesByReport[$r['id']] as $imgPath): ?>
+                      <a href="<?= e(base_path() . $imgPath) ?>" target="_blank" rel="noopener">
+                        <img src="<?= e(base_path() . $imgPath) ?>" alt="Report photo" class="img-thumbnail mt-1" style="max-height:280px;max-width:100%;">
+                      </a>
+                    <?php endforeach; ?>
+                    <div class="small text-muted mt-1">Click the photo to open it full size.</div>
+                  </div>
+                <?php endif; ?>
                 <?php if ($r['latitude'] && $r['longitude']): ?>
                   <div id="miniMap<?= $r['id'] ?>" class="bayan-map-small mb-3"></div>
                 <?php endif; ?>

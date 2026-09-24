@@ -37,6 +37,18 @@ $stmt = $db->prepare(
 $stmt->execute([$user['id']]);
 $reports = $stmt->fetchAll();
 
+// Load photos attached to the listed reports (one query, grouped by report)
+$imagesByReport = [];
+if (!empty($reports)) {
+    $ids = array_column($reports, 'id');
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $imgStmt = $db->prepare("SELECT report_id, file_path FROM incident_images WHERE report_id IN ($in) ORDER BY id");
+    $imgStmt->execute($ids);
+    foreach ($imgStmt->fetchAll() as $img) {
+        $imagesByReport[$img['report_id']][] = $img['file_path'];
+    }
+}
+
 $pageTitle = 'My Assigned Reports';
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/navbar.php';
@@ -56,10 +68,43 @@ require_once __DIR__ . '/../includes/navbar.php';
             <span class="badge <?= status_badge_class($r['status']) ?>"><?= e($r['status']) ?></span>
             <span class="small text-muted"><?= time_ago($r['created_at']) ?></span>
           </div>
+          <?php if (!empty($imagesByReport[$r['id']])): ?>
+            <div class="mt-2 mb-2">
+              <?php foreach ($imagesByReport[$r['id']] as $imgPath): ?>
+                <a href="<?= e(base_path() . $imgPath) ?>" target="_blank" rel="noopener">
+                  <img src="<?= e(base_path() . $imgPath) ?>" alt="Report photo" class="img-fluid rounded border" style="max-height:220px;width:100%;object-fit:cover;">
+                </a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
           <h6 class="fw-bold mt-2"><?= e($r['incident_type']) ?><?= $r['is_sos'] ? ' <span class="badge bg-danger">SOS</span>' : '' ?></h6>
           <p class="small text-muted mb-1">Reporter: <?= e($r['reporter_name'] ?? 'Anonymous') ?></p>
           <p class="small mb-1"><?= e(mb_strimwidth($r['description'] ?? '', 0, 100, '...')) ?></p>
-          <p class="small text-muted mb-2"><i class="fa-solid fa-location-dot"></i> <?= e($r['location_text'] ?: $r['city']) ?></p>
+          <?php
+            // Build a Google Maps directions link: exact coordinates if we have them, otherwise the typed address
+            if (!empty($r['latitude']) && !empty($r['longitude'])) {
+                $dest = (float) $r['latitude'] . ',' . (float) $r['longitude'];
+            } else {
+                $dest = implode(', ', array_filter([$r['location_text'], $r['barangay'], $r['city'], $r['province']]));
+            }
+            $navUrl = $dest !== ''
+                ? 'https://www.google.com/maps/dir/?api=1&destination=' . urlencode($dest) . '&travelmode=driving'
+                : '';
+          ?>
+          <p class="small text-muted mb-2">
+            <?php if ($navUrl): ?>
+              <a href="<?= e($navUrl) ?>" target="_blank" rel="noopener" class="text-decoration-none">
+                <i class="fa-solid fa-location-dot text-danger"></i> <?= e($r['location_text'] ?: $r['city']) ?>
+              </a>
+            <?php else: ?>
+              <i class="fa-solid fa-location-dot"></i> <?= e($r['location_text'] ?: $r['city']) ?>
+            <?php endif; ?>
+          </p>
+          <?php if ($navUrl): ?>
+            <a href="<?= e($navUrl) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-primary w-100 mb-2">
+              <i class="fa-solid fa-diamond-turn-right"></i> Navigate to location
+            </a>
+          <?php endif; ?>
 
           <form method="POST">
             <?= csrf_field() ?>

@@ -1,9 +1,5 @@
-# BayanAlert PH - Root .htaccess
-
-# Disable directory listing
 Options -Indexes
 
-# Protect sensitive files
 <FilesMatch "\.(sql|md|log)$">
     Require all denied
 </FilesMatch>
@@ -14,5 +10,4 @@ Options -Indexes
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Default charset
 AddDefaultCharset UTF-8
