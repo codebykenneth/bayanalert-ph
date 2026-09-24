@@ -1,196 +1,125 @@
-# BayanAlert PH
+# 🇵🇭 BayanAlert PH
+### *Alerto sa Bayan. Ligtas ang Lahat.*
+*(An Alert for the Nation. Safety for Everyone.)*
 
-**Alerto sa Bayan. Ligtas ang Lahat.**
-
-A community safety, disaster preparedness, emergency reporting, and public
-information platform prototype for the Philippines. Built with PHP 8, MySQL/MariaDB,
-Bootstrap 5, and Leaflet.js (OpenStreetMap). Designed to run on XAMPP.
-
-> **This is a college IT project prototype.** It does **not** automatically
-> contact emergency services. In a real emergency, always call **911**.
-> Community-submitted reports are not official government alerts until an
-> administrator verifies them.
+> **A Community Safety, Disaster Preparedness & Emergency Reporting Platform — Capstone Prototype**
 
 ---
 
-## 1. Requirements
+## 📄 Abstract
 
-- [XAMPP](https://www.apachefriends.org/) with **PHP 8.1+**, **Apache**, and **MySQL/MariaDB**
-- A modern web browser (Chrome, Firefox, Edge)
-- No paid API keys required — the map uses free OpenStreetMap tiles via Leaflet.js
+The Philippines is one of the most disaster-prone countries in the world, sitting at the crossroads of the **Pacific Typhoon Belt** and the **Pacific Ring of Fire**. Every year, communities face floods, typhoons, earthquakes, and volcanic activity — often with information that is delayed, fragmented, or unverified.
 
----
+**BayanAlert PH** is proposed as a unifying digital platform that connects **citizens**, **local government units (LGUs)**, and **emergency responders** on a single, transparent system for reporting incidents, issuing verified alerts, and locating critical safety infrastructure such as evacuation centers, hospitals, and police/fire stations.
 
-## 2. Setup Instructions (Beginner-Friendly)
-
-### Step 1 — Install XAMPP
-Download and install XAMPP from https://www.apachefriends.org/ for your OS
-(Windows/macOS/Linux). Run the installer with default options.
-
-### Step 2 — Start Apache and MySQL
-Open the **XAMPP Control Panel** and click **Start** next to both:
-- **Apache**
-- **MySQL**
-
-Both status indicators should turn green.
-
-### Step 3 — Copy the project into htdocs
-Copy the entire `bayanalert-ph` folder into your XAMPP `htdocs` directory so the
-path looks like this:
-
-- **Windows:** `C:\xampp\htdocs\bayanalert-ph`
-- **macOS:** `/Applications/XAMPP/htdocs/bayanalert-ph`
-- **Linux:** `/opt/lampp/htdocs/bayanalert-ph`
-
-### Step 4 — Open phpMyAdmin
-In your browser, go to: `http://localhost/phpmyadmin`
-
-### Step 5 — Create the database
-In phpMyAdmin, click **New** (left sidebar) and create a database named exactly:
-
-```
-bayanalert_ph
-```
-
-(You can skip this — the SQL file also creates it automatically in Step 6.)
-
-### Step 6 — Import the database
-1. Click on the `bayanalert_ph` database (or click **Import** at the top if no
-   database is selected yet).
-2. Click the **Import** tab.
-3. Click **Choose File** and select:
-   ```
-   database/database.sql
-   ```
-4. Scroll down and click **Go**.
-5. Wait for the success message. This creates all tables and inserts sample
-   Philippine data (evacuation centers, hospitals, police/fire stations,
-   sample alerts, sample reports) plus 3 demo accounts.
-
-### Step 7 — Configure database credentials
-Open `config/database.php` in a text editor. The defaults already match a
-stock XAMPP installation:
-
-```php
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'bayanalert_ph');
-define('DB_USER', 'root');
-define('DB_PASS', '');   // Default XAMPP MySQL root password is empty
-```
-
-If you changed your MySQL root password, update `DB_PASS` accordingly.
-
-### Step 8 — Open the application
-In your browser, go to:
-
-```
-http://localhost/bayanalert-ph/
-```
-
-You should see the BayanAlert PH landing page.
+This document presents the **rationale, objectives, and scope** of the system — the "why" behind the build — as a companion to the project's technical documentation.
 
 ---
 
-## 3. Demo Accounts (Development Only)
+## 🌊 1. Background & Context
 
-These accounts are seeded by `database.sql`. **Change these passwords before
-any real deployment** — the system will prompt you to do so on first login.
+| Hazard Type | Frequency in PH Context |
+|---|---|
+| 🌀 Typhoons | ~20 per year enter the Philippine Area of Responsibility |
+| 🌋 Volcanic Activity | Multiple active volcanoes under continuous PHIVOLCS monitoring |
+| 🌍 Earthquakes | Located along active fault lines and the Ring of Fire |
+| 💧 Flooding | Seasonal and recurring in low-lying and urban barangays |
 
-| Role       | Email                        | Password        |
-|------------|-------------------------------|------------------|
-| Admin      | admin@bayanalert.test         | `Admin123!`      |
-| Responder  | responder@bayanalert.test     | `Responder123!`  |
-| Citizen    | citizen@bayanalert.test       | `Citizen123!`    |
-
-You can also register a new citizen account from the **Register** page.
+Despite this level of exposure, **emergency information in many communities still travels informally** — through group chats, word of mouth, or scattered social media posts — with no shared source of truth between residents and the officials responsible for helping them.
 
 ---
 
-## 4. User Roles
+## ❗ 2. Statement of the Problem
 
-- **Citizen** — Register, report incidents, send SOS, view alerts relevant to
-  their location, find evacuation centers/facilities, view Learn & Prepare
-  guides, manage their profile and notifications.
-- **Admin** — Full dashboard with charts, manage/verify/reject reports, manage
-  alerts, evacuation centers, facilities, announcements, users, and the
-  configurable emergency contacts list.
-- **Responder (LGU/Authorized Responder)** — View reports assigned to them and
-  reports in their area, update incident status, post announcements, update
-  evacuation center occupancy.
+During an emergency, three questions repeatedly go unanswered fast enough:
 
-Role-based access control is enforced server-side (`includes/auth.php`,
-`require_role()`) — a citizen cannot open admin/responder pages and vice versa.
+1. 🧑‍🤝‍🧑 **"What is actually happening, right now, near me?"**
+   *(Citizens lack a single trusted channel to report or receive real-time updates.)*
 
----
+2. 🗺️ **"Where do I go, and is it safe / open / full?"**
+   *(Evacuation centers and facilities are not consistently mapped or status-tracked.)*
 
-## 5. Project Structure
+3. 🏛️ **"How do responders separate real reports from noise?"**
+   *(LGUs and responders often work from unverified, unstructured public posts.)*
 
-```
-bayanalert-ph/
-├── index.php, login.php, register.php, logout.php
-├── config/database.php          (PDO connection + app settings)
-├── includes/                    (auth, header, footer, navbar, functions)
-├── citizen/                     (citizen-facing pages)
-├── admin/                       (admin dashboard & management)
-├── responder/                   (responder dashboard & tools)
-├── api/                         (JSON endpoints for the map, etc.)
-├── assets/css/style.css, assets/js/*.js
-├── uploads/reports/             (incident photo uploads)
-└── database/database.sql        (schema + sample data)
-```
+BayanAlert PH is designed as a direct response to these three gaps.
 
 ---
 
-## 6. Security Features Implemented
+## 🎯 3. Objectives of the System
 
-- PDO prepared statements everywhere (no raw SQL concatenation)
-- `password_hash()` / `password_verify()` for all passwords
-- CSRF tokens on every state-changing form (`csrf_field()` / `csrf_verify()`)
-- Session-based auth with idle timeout (30 minutes) and `session_regenerate_id()` on login
-- Role-based authorization on every protected page (`require_role()`)
-- Login rate limiting (5 failed attempts → 15-minute lockout)
-- File upload validation: MIME-type checked, size-limited, renamed to random
-  filenames, and `uploads/` blocks script execution via `.htaccess`
-- Output escaping via `e()` (wraps `htmlspecialchars`) to prevent XSS
-- `config/` and `.sql`/`.md`/`.log` files blocked from direct web access via `.htaccess`
+**General Objective**
+> To design and prototype a role-based digital platform that improves the flow of verified safety information between citizens and local authorities in the Philippines.
 
----
-
-## 7. Notes on Data Honesty
-
-- **Weather** is not live-integrated in this prototype (no paid API used); the
-  citizen dashboard links out to PAGASA instead of fabricating conditions.
-- **Alerts** always display their **source** (e.g., "PAGASA (sample/demo)")
-  so citizens can tell official bulletins apart from prototype/demo data.
-- **Sample/demo data** (evacuation centers, facilities, alerts, accounts) is
-  clearly labeled and should be replaced with real, verified data before any
-  production use.
-- **SOS and incident reports** are stored in the database and made visible to
-  admins/responders — the system explicitly does **not** claim to auto-dispatch
-  emergency services.
+**Specific Objectives**
+- ✅ Enable citizens to **submit incident reports and SOS alerts** with location data
+- ✅ Allow **admins to verify** community reports before they are treated as official
+- ✅ Provide a **live map** of evacuation centers, hospitals, and police/fire stations
+- ✅ Give **responders** the tools to triage, act on, and update the status of reports
+- ✅ Deliver **preparedness education** ("Learn & Prepare") before disaster strikes
+- ✅ Demonstrate secure, role-based system design suitable for public-sector use
 
 ---
 
-## 8. Extending This Prototype
+## 👥 4. Stakeholder Overview
 
-This system is structured so it can grow into a real platform:
-- Swap the weather placeholder for a real PAGASA data feed once available
-- Add SMS/email notifications (e.g., via a gateway API) on top of the existing
-  in-app notification system
-- Add push notifications for mobile
-- Integrate real GIS layers (hazard maps from DENR-MGB, PHIVOLCS) as additional
-  Leaflet overlays
-- Add multi-language support (Filipino/English toggle)
+| Role | Core Need | What the System Gives Them |
+|---|---|---|
+| 🧑 **Citizen** | *"Keep me safe and informed"* | Reporting, SOS, alerts, evacuation map, prep guides |
+| 🚒 **Responder (LGU)** | *"Let me act on what's real"* | Assigned reports, status updates, announcements |
+| 🛡️ **Admin** | *"Keep the information trustworthy"* | Verification tools, alert management, full dashboard |
+
+Access is enforced **server-side by role**, so each user only ever sees what's relevant and appropriate to their responsibility — a citizen cannot access admin tools, and vice versa.
 
 ---
 
-## 9. Troubleshooting
+## 🌱 5. Significance of the Study
 
-- **"Database Connection Error"** — Make sure MySQL is running in XAMPP and
-  that `bayanalert_ph` was imported successfully (Step 6).
-- **Blank page / 500 error** — Check `php_error.log` in your XAMPP `logs`
-  folder; ensure you're running PHP 8.1+.
-- **Map not loading** — Requires an internet connection (it loads OpenStreetMap
-  tiles and Leaflet.js from public CDNs).
-- **Photo upload fails** — Ensure `uploads/reports/` is writable by the web
-  server (`chmod 755` or `775` on Linux/macOS).
+- **To Citizens:** A single, calmer source of truth instead of scattered, unverified posts during high-stress moments.
+- **To LGUs and Responders:** A structured intake system that reduces the chaos of manually monitoring social media for emergencies.
+- **To the Academic Community:** A demonstration of applying secure, role-based web architecture (PHP, MySQL, PDO, CSRF protection, RBAC) to a real, socially meaningful problem.
+- **To Future Developers:** An extensible foundation — not a finished product — built to be honestly upgraded rather than falsely presented as complete.
+
+---
+
+## 🧭 6. Scope and Limitations
+
+**In Scope**
+- ✔️ Citizen incident/SOS reporting with map integration (Leaflet.js + OpenStreetMap)
+- ✔️ Verified alert publishing by admins
+- ✔️ Facility and evacuation center directory
+- ✔️ Role-based dashboards for Citizen / Responder / Admin
+- ✔️ Preparedness education content
+
+**Out of Scope (by design, for now)**
+- ❌ Automatic dispatch of real emergency services — *always defer to 911*
+- ❌ Live government weather data integration (currently links out to PAGASA)
+- ❌ SMS/push notification delivery *(planned extension, not yet built)*
+
+> 🔍 **A note on honesty in design:** Every piece of sample or demo data in this prototype is explicitly labeled as such. In a domain where lives could depend on the accuracy of information, a system that blurs the line between "real" and "placeholder" data is a design failure — even in a student project.
+
+---
+
+## 🚀 7. Future Direction
+
+| Planned Enhancement | Purpose |
+|---|---|
+| 📡 Live PAGASA data feed | Replace placeholder weather with real bulletins |
+| 📱 SMS/Push notifications | Reach citizens with limited or no internet access |
+| 🗺️ DENR-MGB / PHIVOLCS hazard overlays | Add real hazard-mapping layers to the existing map |
+| 🌐 Filipino/English toggle | Ensure alerts reach people in the language they understand best |
+
+---
+
+## 🏁 8. Conclusion
+
+BayanAlert PH is not proposed as a finished emergency system, but as a **working demonstration** of how thoughtful, secure, and honest software design can meaningfully narrow the information gap between Filipino communities and the people responsible for keeping them safe.
+
+At its core, the project rests on one idea:
+
+> 🛡️ *In an emergency, the fastest help is the help that reaches the right person, verified, in time.*
+
+---
+
+*Ligtas ang lahat kapag alerto ang bayan.*
+*— Everyone is safe when the nation is alert.*
